@@ -11,17 +11,42 @@ import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import IconButton from "@mui/material/IconButton";
 import PhotoCamera from "@mui/icons-material/PhotoCamera";
-
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth } from "../firebase";
+import { useState } from "react";
+import { IRegisterData } from "../@types";
 const theme = createTheme();
 
+
+
+
+
 export default function Register() {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const [formData, setFormData] = useState<IRegisterData>({
+    firstName: '',
+    surName: '',
+    email: "",
+    password: '',
+    avatar: '',
+  });
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
+
+    try {
+    const newUser = await createUserWithEmailAndPassword(
+      auth,
+      formData.email,
+      formData.password
+      );
+
+    await updateProfile(newUser.user, {
+      displayName: `${formData.firstName} ${formData.surName}`,
     });
+    } catch (err) {
+      console.log(err)
+    }
+
   };
 
   return (
@@ -58,6 +83,15 @@ export default function Register() {
                   id="firstName"
                   label="First Name"
                   autoFocus
+                  value={formData.firstName}
+                  onChange={(e) => {
+                    setFormData((prev) => {
+                      return {
+                        ...prev,
+                        firstName: e.target.value,
+                      };
+                    });
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -68,6 +102,15 @@ export default function Register() {
                   label="Last Name"
                   name="lastName"
                   autoComplete="family-name"
+                  value={formData.surName}
+                  onChange={(e) => {
+                    setFormData((prev) => {
+                      return {
+                        ...prev,
+                        surName: e.target.value,
+                      };
+                    });
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -78,6 +121,15 @@ export default function Register() {
                   label="Email Address"
                   name="email"
                   autoComplete="email"
+                  value={formData.email}
+                  onChange={(e) => {
+                    setFormData((prev) => {
+                      return {
+                        ...prev,
+                        email: e.target.value,
+                      };
+                    });
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -89,13 +141,18 @@ export default function Register() {
                   type="password"
                   id="password"
                   autoComplete="new-password"
+                  value={formData.password}
+                  onChange={(e) => {
+                    setFormData((prev) => {
+                      return {
+                        ...prev,
+                        password: e.target.value,
+                      };
+                    });
+                  }}
                 />
               </Grid>
-              <Grid
-                item
-                xs={12}
-                container
-              >
+              <Grid item xs={12} container>
                 <Grid item xs>
                   <Button variant="contained" component="label" fullWidth>
                     Upload Avatar
