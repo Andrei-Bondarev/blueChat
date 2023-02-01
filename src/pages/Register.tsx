@@ -9,44 +9,48 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import IconButton from "@mui/material/IconButton";
-import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { useState } from "react";
 import { IRegisterData } from "../@types";
+import { doc, setDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 const theme = createTheme();
 
-
-
-
-
 export default function Register() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<IRegisterData>({
-    firstName: '',
-    surName: '',
+    firstName: "",
+    surName: "",
     email: "",
-    password: '',
-    avatar: '',
+    password: "",
   });
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-
     event.preventDefault();
 
     try {
-    const newUser = await createUserWithEmailAndPassword(
-      auth,
-      formData.email,
-      formData.password
+      const response = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
       );
 
-    await updateProfile(newUser.user, {
-      displayName: `${formData.firstName} ${formData.surName}`,
-    });
-    } catch (err) {
-      console.log(err)
-    }
+      await updateProfile(response.user, {
+        displayName: `${formData.firstName} ${formData.surName}`,
+      });
 
+      await setDoc(doc(db, "users", response.user.uid), {
+        uid: response.user.uid,
+        displayName: response.user.displayName,
+        email: response.user.email,
+      });
+
+      await setDoc(doc(db, "userChats", response.user.uid), {
+      });
+      navigate('/')
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
@@ -151,23 +155,6 @@ export default function Register() {
                     });
                   }}
                 />
-              </Grid>
-              <Grid item xs={12} container>
-                <Grid item xs>
-                  <Button variant="contained" component="label" fullWidth>
-                    Upload Avatar
-                    <input hidden accept="image/*" multiple type="file" />
-                  </Button>
-                </Grid>
-
-                <IconButton
-                  color="primary"
-                  aria-label="upload picture"
-                  component="label"
-                >
-                  <input hidden accept="image/*" type="file" />
-                  <PhotoCamera />
-                </IconButton>
               </Grid>
             </Grid>
             <Button
