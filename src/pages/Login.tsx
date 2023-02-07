@@ -11,18 +11,33 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
+import { signInWithEmailAndPassword , updateProfile } from "firebase/auth";
+import { IRegisterData } from "../@types";
+import { useState } from "react";
+import { auth, db } from "../firebase";
+import { setDoc, doc } from "firebase/firestore";
 
 
 const theme = createTheme();
 
 export default function Login() {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState<IRegisterData>({
+    firstName: "",
+    surName: "",
+    email: "",
+    password: "",
+  });
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
-    });
+
+    try {
+      await signInWithEmailAndPassword(auth,formData.email, formData.password);
+      navigate('/')
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
@@ -58,6 +73,15 @@ export default function Login() {
               name="email"
               autoComplete="email"
               autoFocus
+              value={formData.email}
+              onChange={(e) => {
+                setFormData((prev) => {
+                  return {
+                    ...prev,
+                    email: e.target.value,
+                  };
+                });
+              }}
             />
             <TextField
               margin="normal"
@@ -68,6 +92,15 @@ export default function Login() {
               type="password"
               id="password"
               autoComplete="current-password"
+              value={formData.password}
+              onChange={(e) => {
+                setFormData((prev) => {
+                  return {
+                    ...prev,
+                    password: e.target.value,
+                  };
+                });
+              }}
             />
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
@@ -88,7 +121,7 @@ export default function Login() {
                 </Link>
               </Grid>
               <Grid item>
-                <Link href="#" variant="body2">
+                <Link href='/register' variant="body2">
                   {"Don't have an account? Sign Up"}
                 </Link>
               </Grid>
